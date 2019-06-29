@@ -48,6 +48,6 @@ function draw(prevX, prevY, currX, currY) {
 }
 
 var conn = function webSockets() {
-  var websocket = new WebSocket("ws://drawinggame1.herokuapp.com:5001", "protocolOne");
+  var websocket = new WebSocket("wss://drawinggame1.herokuapp.com:5001", "protocolOne");
   return websocket;
 }
