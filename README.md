@@ -1,3 +1,1 @@
 Drawing game
-
-initial commit
