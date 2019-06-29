@@ -1,4 +1,4 @@
-var websocket = new WebSocket("wss://drawinggame1.herokuapp.com:5001", "protocolOne");
+var websocket = new WebSocket("wss://drawinggame1.herokuapp.com:5000", "protocolOne");
 
 function init() {
   var mousedown = false;
