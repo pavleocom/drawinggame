@@ -14,11 +14,17 @@ var app = express()
 var server = http.createServer(app)
 server.listen(5001)
 
-console.log("http server listening on %d", 500)
+console.log("http server listening on %d", 5001)
 
 var wss = new WebSocketServer({ server: server })
 console.log("websocket server created")
 
-wss.on("message", function (ws) {
-  console.log(ws);
-}, 1000);
+wss.on('connection', function connection(ws) {
+  ws.on('message', function incoming(message) {
+    wss.clients.forEach((client) => {
+      client.send(message);
+    });
+  });
+
+});
+

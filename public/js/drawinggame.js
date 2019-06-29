@@ -50,6 +50,7 @@ function draw(prevX, prevY, currX, currY) {
 }
 
 websocket.onmessage = function (e) {
-  console.log(e.data);
+  var coords = JSON.parse(e.data);
+  draw(coords.prevX, coords.prevY, coords.currX, coords.currY);
 }
 
