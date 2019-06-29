@@ -1,5 +1,5 @@
 function init() {
-	var websocket = conn();
+	var websocket = new WebSocket("wss://drawinggame1.herokuapp.com:5001", "protocolOne");
   var mousedown = false;
   var prevX;
   var prevY;
@@ -14,7 +14,7 @@ function init() {
 				prevX = currX;
 				prevY = currY;
 			}
-			websocket.send(JSON.stringify({
+			websocket.onopen = () => websocket.send(JSON.stringify({
 				prevX: prevX,
 				prevY: prevY,
 				currX: currX,
@@ -47,7 +47,5 @@ function draw(prevX, prevY, currX, currY) {
   ctx.closePath();
 }
 
-var conn = function webSockets() {
-  var websocket = new WebSocket("wss://drawinggame1.herokuapp.com:5001", "protocolOne");
-  return websocket;
-}
+
+
