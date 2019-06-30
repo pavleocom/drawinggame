@@ -1,41 +1,40 @@
-var websocket = new WebSocket("wss://drawinggame1.herokuapp.com", "protocolOne");
+var websocket = new WebSocket(getWebSocketUrl(), "protocolOne");
+var mousedown = false;
+var prevX;
+var prevY;
 
-function init() {
-  var mousedown = false;
-  var prevX;
-  var prevY;
+var canvas = document.getElementById('canvas');
 
-  var canvas = document.getElementById('canvas');
-
-  canvas.addEventListener("mousemove", function (e) {
-    currX = e.offsetX;
-    currY = e.offsetY;
-    if (mousedown) {
-      if (!prevX) {
-        prevX = currX;
-        prevY = currY;
-      }
-      websocket.send(
-        JSON.stringify({
-          prevX: prevX,
-          prevY: prevY,
-          currX: currX,
-          currY: currY
-        }));
-      draw(prevX, prevY, currX, currY);
+canvas.addEventListener("mousemove", function (e) {
+  currX = e.offsetX;
+  currY = e.offsetY;
+  if (mousedown) {
+    if (!prevX) {
+      prevX = currX;
+      prevY = currY;
     }
-    prevX = currX;
-    prevY = currY;
-  });
-  canvas.addEventListener("mousedown", function (e) {
-    mousedown = true;
-  });
-  canvas.addEventListener("mouseup", function (e) {
-    mousedown = false
-  });
-
-
-}
+    websocket.send(
+      JSON.stringify({
+        prevX: prevX,
+        prevY: prevY,
+        currX: currX,
+        currY: currY
+      }));
+    draw(prevX, prevY, currX, currY);
+  }
+  prevX = currX;
+  prevY = currY;
+});
+canvas.addEventListener("mousedown", function (e) {
+  mousedown = true;
+});
+canvas.addEventListener("mouseup", function (e) {
+  mousedown = false
+});
+canvas.addEventListener("mouseout", function (e) {
+  prevX = null
+  prevY = null
+});
 
 function draw(prevX, prevY, currX, currY) {
   var canvas = document.getElementById('canvas');
@@ -54,3 +53,6 @@ websocket.onmessage = function (e) {
   draw(coords.prevX, coords.prevY, coords.currX, coords.currY);
 }
 
+function getWebSocketUrl() {
+  return location.origin.replace("https", "wss").replace("http", "ws");
+}
