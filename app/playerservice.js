@@ -1,10 +1,12 @@
 module.exports.addPlayer = function (name, socket) { 
   console.log('adding player ' + name)
-  playersMap.set(name, socket)
+  socket.playerName = name
+  playersMap.set(name)
 };
 
-module.exports.removingPlayer = function (name) { 
-  console.log('removing player' + name)
+module.exports.removePlayer = function (name) { 
+  console.log('removing player ' + name)
+  playersMap.delete(name)
 };
 
 module.exports.getPlayers = function (name) { 

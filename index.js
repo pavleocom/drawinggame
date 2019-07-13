@@ -28,6 +28,7 @@ wss.on('connection', function connection(ws) {
       'type': 'players',
       'data': playersList
     }));
+    
   });
 
   ws.on('message', function incoming(message) {
@@ -40,8 +41,7 @@ wss.on('connection', function connection(ws) {
   });
 
   ws.on('close', function incoming() {
-    console.log(ws);
-    console.log('!!!: ' + playerservice.getPlayerNameForSocket(ws))
+    playerservice.removePlayer(ws.playerName);
   });
 
 });
