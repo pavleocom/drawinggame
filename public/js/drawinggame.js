@@ -49,8 +49,34 @@ function draw(prevX, prevY, currX, currY) {
 }
 
 websocket.onmessage = function (e) {
-  var coords = JSON.parse(e.data);
-  draw(coords.prevX, coords.prevY, coords.currX, coords.currY);
+  var message = JSON.parse(e.data)
+  switch (message.type) {
+    case 'coordinates':
+        var coords = JSON.parse(message.data);
+        draw(coords.prevX, coords.prevY, coords.currX, coords.currY);
+        break;
+    case 'players':
+        updatePlayersList(message.data)
+        break;
+  }
+  
+}
+
+function updatePlayersList(list) {
+  var playersColumn = document.getElementById('playerslist');
+  while (playersColumn.firstChild) {
+    playersColumn.removeChild(playersColumn.firstChild);
+  }
+
+  list.forEach(function(elm) {
+    var div = document.createElement('div');
+    var text = document.createTextNode(elm);
+    div.appendChild(text);
+    playersColumn.appendChild(div);
+  });
+
+
+
 }
 
 function getWebSocketUrl() {

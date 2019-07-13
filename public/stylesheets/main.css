@@ -1,4 +1,31 @@
+.main {
+  position: relative;
+  height: 500px;
+}
+.player-column {
+  background-color: #dff;
+  width: 180px
+}
+
+.canvas-column {
+  width: 800px;
+}
+
+.chat-column {
+  background-color: #ffc;
+  width: 180px;
+}
+
+.column {
+  display: inline-block;
+  height: 100%;
+  vertical-align: top;
+  position: relative;
+  top: 0;
+  bottom: 0;
+  border: 1px red solid;
+}
+
 #canvas {
-  margin: 40px;
   border:1px solid #000000;
 }
