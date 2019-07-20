@@ -3,6 +3,22 @@ var mousedown = false;
 var prevX;
 var prevY;
 
+var chatboxOutput = document.getElementById('chatbox-output');
+var form = document.getElementById('message_form');
+
+form.addEventListener('submit', function(e) {
+  e.preventDefault();
+  var message_input = document.getElementById('message');
+  var message = message_input.value;
+  message_input.value = '';
+  websocket.send(
+    JSON.stringify({
+      'type': 'chat',
+      'data': message
+    }));
+
+})
+
 var canvas = document.getElementById('canvas');
 
 canvas.addEventListener("mousemove", function (e) {
@@ -15,10 +31,13 @@ canvas.addEventListener("mousemove", function (e) {
     }
     websocket.send(
       JSON.stringify({
-        prevX: prevX,
-        prevY: prevY,
-        currX: currX,
-        currY: currY
+        'type': 'coordinates',
+        'data': {
+          prevX: prevX,
+          prevY: prevY,
+          currX: currX,
+          currY: currY
+        }
       }));
     draw(prevX, prevY, currX, currY);
   }
@@ -52,11 +71,14 @@ websocket.onmessage = function (e) {
   var message = JSON.parse(e.data)
   switch (message.type) {
     case 'coordinates':
-        var coords = JSON.parse(message.data);
+        var coords = message.data;
         draw(coords.prevX, coords.prevY, coords.currX, coords.currY);
         break;
     case 'players':
         updatePlayersList(message.data)
+        break;
+    case 'chat':
+        printChatMessage(message.data)
         break;
   }
   
@@ -81,4 +103,11 @@ function updatePlayersList(list) {
 
 function getWebSocketUrl() {
   return location.origin.replace("https", "wss").replace("http", "ws");
+}
+
+function printChatMessage(message) {
+  var paragraphNode = document.createElement('p');
+  var messageTextNode = document.createTextNode(message);
+  paragraphNode.appendChild(messageTextNode);
+  chatboxOutput.appendChild(paragraphNode);
 }

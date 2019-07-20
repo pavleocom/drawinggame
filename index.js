@@ -31,13 +31,30 @@ wss.on('connection', function connection(ws) {
     
   });
 
-  ws.on('message', function incoming(message) {
-    wss.clients.forEach((client) => {
-      client.send(JSON.stringify({
-        'type': 'coordinates',
-        'data': message
-        }));
-    });
+  ws.on('message', function incoming(messageString) {
+    var message = JSON.parse(messageString);
+    switch (message.type) {
+      case 'coordinates':
+        wss.clients.forEach((client) => {
+          client.send(JSON.stringify({
+            'type': 'coordinates',
+            'data': message.data
+            }));  
+        });
+        break;
+      case 'chat':
+        wss.clients.forEach((client) => {
+          client.send(JSON.stringify({
+            'type': 'chat',
+            'data': message.data
+            }));  
+        });
+        break;
+      default: 
+        console.log(message);
+    }
+
+    
   });
 
   ws.on('close', function incoming() {
