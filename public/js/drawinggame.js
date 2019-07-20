@@ -2,11 +2,26 @@ var websocket = new WebSocket(getWebSocketUrl(), "protocolOne");
 var mousedown = false;
 var prevX;
 var prevY;
+var colour = '#000';
 
 var chatboxOutput = document.getElementById('chatbox-output');
-var form = document.getElementById('message_form');
+var canvas = document.getElementById('canvas');
+var colourBtns = document.querySelectorAll('.colour-btn');
 
-form.addEventListener('submit', function(e) {
+colourBtns.forEach(function(btn) {
+  btn.addEventListener('click', function(e) {
+    colour = this.dataset.colour;
+  }.bind(btn))
+})
+
+document.getElementById('clear_canvas_btn').addEventListener('click', function(e) {
+  websocket.send(
+    JSON.stringify({
+      'type': 'clear-canvas'
+    }));
+})
+
+document.getElementById('message_form').addEventListener('submit', function(e) {
   e.preventDefault();
   var message_input = document.getElementById('message');
   var message = message_input.value;
@@ -16,10 +31,7 @@ form.addEventListener('submit', function(e) {
       'type': 'chat',
       'data': message
     }));
-
 })
-
-var canvas = document.getElementById('canvas');
 
 canvas.addEventListener("mousemove", function (e) {
   currX = e.offsetX;
@@ -36,10 +48,11 @@ canvas.addEventListener("mousemove", function (e) {
           prevX: prevX,
           prevY: prevY,
           currX: currX,
-          currY: currY
+          currY: currY,
+          colour: colour
         }
       }));
-    draw(prevX, prevY, currX, currY);
+    draw(prevX, prevY, currX, currY, colour);
   }
   prevX = currX;
   prevY = currY;
@@ -55,16 +68,20 @@ canvas.addEventListener("mouseout", function (e) {
   prevY = null
 });
 
-function draw(prevX, prevY, currX, currY) {
+function draw(prevX, prevY, currX, currY, colour) {
   var canvas = document.getElementById('canvas');
   var ctx = canvas.getContext('2d');
   ctx.beginPath();
   ctx.moveTo(prevX, prevY);
   ctx.lineTo(currX, currY);
-  ctx.strokeStyle = '#000';
+  ctx.strokeStyle = colour;
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.closePath();
+}
+
+function clearCanvas() {
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
 }
 
 websocket.onmessage = function (e) {
@@ -72,13 +89,16 @@ websocket.onmessage = function (e) {
   switch (message.type) {
     case 'coordinates':
         var coords = message.data;
-        draw(coords.prevX, coords.prevY, coords.currX, coords.currY);
+        draw(coords.prevX, coords.prevY, coords.currX, coords.currY, coords.colour);
         break;
     case 'players':
         updatePlayersList(message.data)
         break;
     case 'chat':
         printChatMessage(message.data)
+        break;
+    case 'clear-canvas':
+        clearCanvas()
         break;
   }
   
@@ -96,9 +116,6 @@ function updatePlayersList(list) {
     div.appendChild(text);
     playersColumn.appendChild(div);
   });
-
-
-
 }
 
 function getWebSocketUrl() {

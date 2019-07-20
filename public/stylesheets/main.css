@@ -23,7 +23,6 @@
   position: relative;
   top: 0;
   bottom: 0;
-  border: 1px red solid;
 }
 
 #canvas {
@@ -34,4 +33,26 @@
   vertical-align: bottom;
   position: absolute;
   bottom: 0;
+}
+
+#chatbox-output {
+  max-height: 400px;
+  overflow-y: scroll;
+}
+
+.c1, .c3 {
+  width: 180px;
+}
+
+.c2 {
+  width: 800px;
+  padding: 10px 0;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:not(#clear_canvas_btn) {
+  height: 15px;
 }

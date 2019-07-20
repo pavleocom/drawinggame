@@ -50,6 +50,13 @@ wss.on('connection', function connection(ws) {
             }));  
         });
         break;
+      case 'clear-canvas':
+        wss.clients.forEach((client) => {
+          client.send(JSON.stringify({
+            'type': 'clear-canvas'
+            }));  
+        });
+        break;
       default: 
         console.log(message);
     }
