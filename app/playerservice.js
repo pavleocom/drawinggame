@@ -1,20 +1,25 @@
-module.exports.addPlayer = function (name, socket) { 
+const playersMap = new Map();
+
+var addPlayer = function (name, socket) { 
   console.log('adding player ' + name)
   socket.playerName = name
   playersMap.set(name)
 };
 
-module.exports.removePlayer = function (name) { 
+var removePlayer = function (name) { 
   console.log('removing player ' + name)
   playersMap.delete(name)
 };
 
-module.exports.getPlayers = function (name) { 
+var getPlayers = function (name) { 
   return playersMap
 };
 
-module.exports.getPlayerNameForSocket = function (socket) { 
+var getPlayerNameForSocket = function (socket) { 
   return Object.keys(playersMap).find(key => playersMap[key] === socket);
 };
 
-const playersMap = new Map();
+exports.addPlayer = addPlayer;
+exports.removePlayer = removePlayer;
+exports.getPlayers = getPlayers;
+exports.getPlayerNameForSocket = getPlayerNameForSocket;
