@@ -14,6 +14,10 @@ lineWidthInput.addEventListener('change', function(e) {
   lineWidth = lineWidthInput.value;
 })
 
+window.addEventListener('mouseup', function(e) {
+  mousedown = false;
+})
+
 colourBtns.forEach(function(btn) {
   btn.addEventListener('click', function(e) {
     colour = this.dataset.colour;
