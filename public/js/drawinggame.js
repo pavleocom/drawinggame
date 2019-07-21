@@ -3,10 +3,16 @@ var mousedown = false;
 var prevX;
 var prevY;
 var colour = '#000';
+var lineWidth = '5';
 
 var chatboxOutput = document.getElementById('chatbox-output');
 var canvas = document.getElementById('canvas');
 var colourBtns = document.querySelectorAll('.colour-btn');
+var lineWidthInput = document.getElementById('line-width');
+
+lineWidthInput.addEventListener('change', function(e) {
+  lineWidth = lineWidthInput.value;
+})
 
 colourBtns.forEach(function(btn) {
   btn.addEventListener('click', function(e) {
@@ -25,12 +31,13 @@ document.getElementById('message_form').addEventListener('submit', function(e) {
   e.preventDefault();
   var message_input = document.getElementById('message');
   var message = message_input.value;
-  message_input.value = '';
-  websocket.send(
-    JSON.stringify({
+  if (message) {
+    message_input.value = '';
+    websocket.send(JSON.stringify({
       'type': 'chat',
       'data': message
     }));
+  }
 })
 
 canvas.addEventListener("mousemove", function (e) {
@@ -49,13 +56,33 @@ canvas.addEventListener("mousemove", function (e) {
           prevY: prevY,
           currX: currX,
           currY: currY,
-          colour: colour
+          colour: colour,
+          lineWidth: lineWidth
         }
       }));
-    draw(prevX, prevY, currX, currY, colour);
+    draw(prevX, prevY, currX, currY, colour, lineWidth);
   }
   prevX = currX;
   prevY = currY;
+});
+canvas.addEventListener("click", function(e) {
+  currX = e.offsetX;
+  currY = e.offsetY;
+  prevX = currX;
+  prevY = currY - 1;
+  websocket.send(
+    JSON.stringify({
+      'type': 'coordinates',
+      'data': {
+        prevX: prevX,
+        prevY: prevY,
+        currX: currX,
+        currY: currY,
+        colour: colour,
+        lineWidth: lineWidth
+      }
+    }));
+  draw(prevX, prevY, currX, currY, colour, lineWidth);
 });
 canvas.addEventListener("mousedown", function (e) {
   mousedown = true;
@@ -68,14 +95,15 @@ canvas.addEventListener("mouseout", function (e) {
   prevY = null
 });
 
-function draw(prevX, prevY, currX, currY, colour) {
+function draw(prevX, prevY, currX, currY, colour, lineWidth) {
   var canvas = document.getElementById('canvas');
   var ctx = canvas.getContext('2d');
   ctx.beginPath();
   ctx.moveTo(prevX, prevY);
   ctx.lineTo(currX, currY);
   ctx.strokeStyle = colour;
-  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineWidth = lineWidth;
   ctx.stroke();
   ctx.closePath();
 }
@@ -89,16 +117,22 @@ websocket.onmessage = function (e) {
   switch (message.type) {
     case 'coordinates':
         var coords = message.data;
-        draw(coords.prevX, coords.prevY, coords.currX, coords.currY, coords.colour);
+        draw(coords.prevX, coords.prevY, coords.currX, coords.currY, coords.colour, coords.lineWidth);
         break;
     case 'players':
         updatePlayersList(message.data)
         break;
     case 'chat':
-        printChatMessage(message.data)
+        printChatMessage(message.data.name, message.data.message)
         break;
     case 'clear-canvas':
         clearCanvas()
+        break;
+    case 'secret-word':
+        updateSecretWord(message.data)
+        break;
+    case 'player-correct-guess':
+        printBotMessage(message.data.name, 'correctly guessed the word!')
         break;
   }
   
@@ -118,13 +152,33 @@ function updatePlayersList(list) {
   });
 }
 
+function updateSecretWord(secretWord) {
+  document.getElementById('secret-word').innerHTML = secretWord;
+}
+
 function getWebSocketUrl() {
   return location.origin.replace("https", "wss").replace("http", "ws");
 }
 
-function printChatMessage(message) {
+function printChatMessage(name, message) {
   var paragraphNode = document.createElement('p');
-  var messageTextNode = document.createTextNode(message);
+  var messageTextNode = document.createTextNode(name + ': ' + message);
   paragraphNode.appendChild(messageTextNode);
   chatboxOutput.appendChild(paragraphNode);
+  chatboxOutput.scrollTop = chatboxOutput.scrollHeight;
+  if (chatboxOutput.childElementCount > 20) {
+    chatboxOutput.firstChild.remove();
+  }
+}
+
+function printBotMessage(name, message) {
+  var paragraphNode = document.createElement('p');
+  var messageTextNode = document.createTextNode(name + ' ' + message);
+  paragraphNode.appendChild(messageTextNode);
+  paragraphNode.setAttribute('style', 'color: limegreen;');
+  chatboxOutput.appendChild(paragraphNode);
+  chatboxOutput.scrollTop = chatboxOutput.scrollHeight;
+  if (chatboxOutput.childElementCount > 20) {
+    chatboxOutput.firstChild.remove();
+  }
 }

@@ -1,10 +1,19 @@
+body {
+  background-image: url('/media/bg.png');
+}
+
 .main {
   position: relative;
   height: 500px;
 }
 .player-column {
-  background-color: #dff;
-  width: 180px
+  background: rgba(0, 0, 0, .7);
+  color: white;
+  width: 180px;
+}
+
+.player-column div {
+  padding: 3px 3px;
 }
 
 .canvas-column {
@@ -12,8 +21,9 @@
 }
 
 .chat-column {
-  background-color: #ffc;
-  width: 180px;
+  background: rgba(0, 0, 0, .7);
+  color: white;
+  width: 240px;
 }
 
 .column {
@@ -26,18 +36,30 @@
 }
 
 #canvas {
-  border:1px solid #000000;
+  cursor: crosshair;
+  background-color: white;
 }
 
 #chatbox-input {
   vertical-align: bottom;
   position: absolute;
   bottom: 0;
+  height: 21px;
 }
 
 #chatbox-output {
-  max-height: 400px;
+  height: calc(100% - 21px);
   overflow-y: scroll;
+}
+
+#chatbox-output p {
+  overflow-wrap: break-word;
+  margin: 0;
+  padding: 3px 1px;
+}
+
+#chatbox-output p:nth-child(even) {
+  background: rgba(255, 255, 255, .1);
 }
 
 .c1, .c3 {
@@ -55,4 +77,22 @@ button {
 
 button:not(#clear_canvas_btn) {
   height: 15px;
+}
+
+#message {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#chatbox-input {
+  width: 100%;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+
+#secret-word {
+  float: right;
 }
