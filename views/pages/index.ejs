@@ -4,6 +4,11 @@
     <% include ../partials/header.ejs %>
   </head>
   <body>
+    <nav id="navbar">
+      <span>Drawing Game</span>
+      <span id="secret-word"></span>
+      <span id="clock">Clock</span>
+    </nav>
     <div class="main">
       <div id="playerslist" class='player-column column'>
       </div>
@@ -20,7 +25,7 @@
         </div>
       </div>
     </div>
-    <div>
+    <div id="main-bottom">
       <div class="column c1"></div>
       <div id="drawing_controls" class="column c2">
         <button id="clear_canvas_btn">Clear</button>
@@ -34,7 +39,6 @@
         <button class="colour-btn" style="background-color: #0f0;" data-colour="#0f0"></button>
         <button class="colour-btn" style="background-color: #ee82ee;" data-colour="#ee82ee"></button>
         <input id="line-width" type="range" min="1" max="100" value="5">
-        <span id="secret-word"></span>
       </div>
       <div class="column c3"></div>
     </div>

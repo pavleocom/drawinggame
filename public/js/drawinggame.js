@@ -1,5 +1,7 @@
 var websocket = new WebSocket(getWebSocketUrl(), "protocolOne");
 var mousedown = false;
+var myPlayerName;
+var drawingPlayerName;
 var prevX;
 var prevY;
 var colour = '#000';
@@ -10,28 +12,36 @@ var canvas = document.getElementById('canvas');
 var colourBtns = document.querySelectorAll('.colour-btn');
 var lineWidthInput = document.getElementById('line-width');
 
-lineWidthInput.addEventListener('change', function(e) {
+lineWidthInput.addEventListener('change', function (e) {
   lineWidth = lineWidthInput.value;
 })
 
-window.addEventListener('mouseup', function(e) {
+canvas.addEventListener('dblclick', function (event) {
+  window.getSelection().removeAllRanges();
+});
+
+canvas.addEventListener('mouseover', function (event) {
+  window.getSelection().removeAllRanges();
+});
+
+window.addEventListener('mouseup', function (e) {
   mousedown = false;
 })
 
-colourBtns.forEach(function(btn) {
-  btn.addEventListener('click', function(e) {
+colourBtns.forEach(function (btn) {
+  btn.addEventListener('click', function (e) {
     colour = this.dataset.colour;
   }.bind(btn))
 })
 
-document.getElementById('clear_canvas_btn').addEventListener('click', function(e) {
+document.getElementById('clear_canvas_btn').addEventListener('click', function (e) {
   websocket.send(
     JSON.stringify({
       'type': 'clear-canvas'
     }));
 })
 
-document.getElementById('message_form').addEventListener('submit', function(e) {
+document.getElementById('message_form').addEventListener('submit', function (e) {
   e.preventDefault();
   var message_input = document.getElementById('message');
   var message = message_input.value;
@@ -45,13 +55,38 @@ document.getElementById('message_form').addEventListener('submit', function(e) {
 })
 
 canvas.addEventListener("mousemove", function (e) {
-  currX = e.offsetX;
-  currY = e.offsetY;
-  if (mousedown) {
-    if (!prevX) {
-      prevX = currX;
-      prevY = currY;
+  if (myPlayerName === drawingPlayerName) {
+    currX = e.offsetX;
+    currY = e.offsetY;
+    if (mousedown) {
+      if (!prevX) {
+        prevX = currX;
+        prevY = currY;
+      }
+      websocket.send(
+        JSON.stringify({
+          'type': 'coordinates',
+          'data': {
+            prevX: prevX,
+            prevY: prevY,
+            currX: currX,
+            currY: currY,
+            colour: colour,
+            lineWidth: lineWidth
+          }
+        }));
+      draw(prevX, prevY, currX, currY, colour, lineWidth);
     }
+    prevX = currX;
+    prevY = currY;
+  }
+});
+canvas.addEventListener("click", function (e) {
+  if (myPlayerName === drawingPlayerName) {
+    currX = e.offsetX;
+    currY = e.offsetY;
+    prevX = currX;
+    prevY = currY - 1;
     websocket.send(
       JSON.stringify({
         'type': 'coordinates',
@@ -66,27 +101,6 @@ canvas.addEventListener("mousemove", function (e) {
       }));
     draw(prevX, prevY, currX, currY, colour, lineWidth);
   }
-  prevX = currX;
-  prevY = currY;
-});
-canvas.addEventListener("click", function(e) {
-  currX = e.offsetX;
-  currY = e.offsetY;
-  prevX = currX;
-  prevY = currY - 1;
-  websocket.send(
-    JSON.stringify({
-      'type': 'coordinates',
-      'data': {
-        prevX: prevX,
-        prevY: prevY,
-        currX: currX,
-        currY: currY,
-        colour: colour,
-        lineWidth: lineWidth
-      }
-    }));
-  draw(prevX, prevY, currX, currY, colour, lineWidth);
 });
 canvas.addEventListener("mousedown", function (e) {
   mousedown = true;
@@ -120,26 +134,32 @@ websocket.onmessage = function (e) {
   var message = JSON.parse(e.data)
   switch (message.type) {
     case 'coordinates':
-        var coords = message.data;
-        draw(coords.prevX, coords.prevY, coords.currX, coords.currY, coords.colour, coords.lineWidth);
-        break;
+      var coords = message.data;
+      draw(coords.prevX, coords.prevY, coords.currX, coords.currY, coords.colour, coords.lineWidth);
+      break;
+    case 'my-player-name':
+      myPlayerName = message.data;
+      break;
+    case 'drawing-player-name':
+      drawingPlayerName = message.data;
+      break;
     case 'players':
-        updatePlayersList(message.data)
-        break;
+      updatePlayersList(message.data)
+      break;
     case 'chat':
-        printChatMessage(message.data.name, message.data.message)
-        break;
+      printChatMessage(message.data.name, message.data.message)
+      break;
     case 'clear-canvas':
-        clearCanvas()
-        break;
+      clearCanvas()
+      break;
     case 'secret-word':
-        updateSecretWord(message.data)
-        break;
+      updateSecretWord(message.data)
+      break;
     case 'player-correct-guess':
-        printBotMessage(message.data.name, 'correctly guessed the word!')
-        break;
+      printBotMessage(message.data.name, 'correctly guessed the word!')
+      break;
   }
-  
+
 }
 
 function updatePlayersList(list) {
@@ -148,7 +168,7 @@ function updatePlayersList(list) {
     playersColumn.removeChild(playersColumn.firstChild);
   }
 
-  list.forEach(function(elm) {
+  list.forEach(function (elm) {
     var div = document.createElement('div');
     var text = document.createTextNode(elm);
     div.appendChild(text);

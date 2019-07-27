@@ -1,5 +1,7 @@
 body {
   background-image: url('/media/bg.png');
+  font-family: 'Roboto', sans-serif;
+  margin: 0px;
 }
 
 .main {
@@ -10,6 +12,7 @@ body {
   background: rgba(0, 0, 0, .7);
   color: white;
   width: 180px;
+  text-align: left;
 }
 
 .player-column div {
@@ -24,6 +27,7 @@ body {
   background: rgba(0, 0, 0, .7);
   color: white;
   width: 240px;
+  text-align: left;
 }
 
 .column {
@@ -64,11 +68,13 @@ body {
 
 .c1, .c3 {
   width: 180px;
+  text-align: center;
 }
 
 .c2 {
   width: 800px;
   padding: 10px 0;
+  text-align: center;
 }
 
 button {
@@ -92,7 +98,25 @@ button:not(#clear_canvas_btn) {
   display: none;
 }
 
-
 #secret-word {
-  float: right;
+  margin-left: 300px
+}
+
+#clock {
+  margin-left: 300px;
+}
+
+#navbar {
+  background-color: white;
+  text-align: center;
+  margin-bottom: 5px;
+  padding: 10px;
+}
+
+.main {
+  text-align: center;
+}
+
+#main-bottom {
+  text-align: center;
 }
