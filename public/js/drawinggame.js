@@ -34,7 +34,7 @@ colourBtns.forEach(function (btn) {
   }.bind(btn))
 })
 
-document.getElementById('clear_canvas_btn').addEventListener('click', function (e) {
+document.getElementById('clear-canvas-btn').addEventListener('click', function (e) {
   websocket.send(
     JSON.stringify({
       'type': 'clear-canvas'
@@ -142,6 +142,17 @@ websocket.onmessage = function (e) {
       break;
     case 'drawing-player-name':
       drawingPlayerName = message.data;
+      var chatInput = document.getElementById('message');
+      if (myPlayerName === drawingPlayerName) {
+        chatInput.value = 'Chat disabled';
+        chatInput.disabled = true;
+      } else {
+        chatInput.value = chatInput.value.replace(/^Chat disabled$/, '');
+        chatInput.disabled = false;
+      }
+      
+      clearCanvas()
+      printBotMessage(message.data, 'is drawing', 'lightblue')
       break;
     case 'players':
       updatePlayersList(message.data)
@@ -156,7 +167,13 @@ websocket.onmessage = function (e) {
       updateSecretWord(message.data)
       break;
     case 'player-correct-guess':
-      printBotMessage(message.data.name, 'correctly guessed the word!')
+      printBotMessage(message.data.name, 'correctly guessed the word!', 'limegreen')
+      break;
+    case 'player-connected':
+      printBotMessage(message.data, 'has connected', 'lightblue')
+      break;
+    case 'player-disconnected':
+      printBotMessage(message.data, 'has disconnected', 'lightblue')
       break;
   }
 
@@ -195,14 +212,15 @@ function printChatMessage(name, message) {
   }
 }
 
-function printBotMessage(name, message) {
+function printBotMessage(name, message, color) {
   var paragraphNode = document.createElement('p');
   var messageTextNode = document.createTextNode(name + ' ' + message);
   paragraphNode.appendChild(messageTextNode);
-  paragraphNode.setAttribute('style', 'color: limegreen;');
+  paragraphNode.setAttribute('style', 'color: ' + color);
   chatboxOutput.appendChild(paragraphNode);
   chatboxOutput.scrollTop = chatboxOutput.scrollHeight;
   if (chatboxOutput.childElementCount > 20) {
     chatboxOutput.firstChild.remove();
   }
 }
+

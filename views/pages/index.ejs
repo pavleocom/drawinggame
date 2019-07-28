@@ -1,46 +1,60 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <% include ../partials/header.ejs %>
-  </head>
-  <body>
-    <nav id="navbar">
-      <span>Drawing Game</span>
-      <span id="secret-word"></span>
-      <span id="clock">Clock</span>
-    </nav>
-    <div class="main">
-      <div id="playerslist" class='player-column column'>
-      </div>
-      <div class='canvas-column column'>
+
+<head>
+  <% include ../partials/header.ejs %>
+</head>
+
+<body>
+  <nav id="navbar">
+    <span>Drawing Game</span>
+    <span id="secret-word"></span>
+    <span id="clock">Clock</span>
+  </nav>
+  <div class="main">
+    <div id="playerslist" class='player-column column'>
+    </div>
+    <div class='canvas-column column'>
       <canvas id="canvas" width="800" height="500"></canvas>
+    </div>
+    <div class='chat-column column'>
+      <div id="chatbox-output">
       </div>
-      <div class='chat-column column'>
-        <div id="chatbox-output">
-        </div>
-        <div id="chatbox-input">
-          <form id="message_form">
-            <input id="message" type="text" autocomplete="off">
-          </form>
-        </div>
+      <div id="chatbox-input">
+        <form id="message_form">
+          <input id="message" type="text" autocomplete="off">
+        </form>
       </div>
     </div>
-    <div id="main-bottom">
-      <div class="column c1"></div>
-      <div id="drawing_controls" class="column c2">
-        <button id="clear_canvas_btn">Clear</button>
-        <button class="colour-btn" style="background-color: #000;" data-colour="#000"></button>
-        <button class="colour-btn" style="background-color: #fff;" data-colour="#fff"></button>
-        <button class="colour-btn" style="background-color: #aaa;" data-colour="#aaa"></button>
-        <button class="colour-btn" style="background-color: #f00;" data-colour="#f00"></button>
-        <button class="colour-btn" style="background-color: #ffa500;" data-colour="#ffa500"></button>
-        <button class="colour-btn" style="background-color: #ff0;" data-colour="#ff0"></button>
-        <button class="colour-btn" style="background-color: #00f;" data-colour="#00f"></button>
-        <button class="colour-btn" style="background-color: #0f0;" data-colour="#0f0"></button>
-        <button class="colour-btn" style="background-color: #ee82ee;" data-colour="#ee82ee"></button>
-        <input id="line-width" type="range" min="1" max="100" value="5">
+  </div>
+  <div id="main-bottom">
+    <div class="column c1"></div>
+    <div id="drawing_controls" class="column c2">
+          <button id="clear-canvas-btn">Clear</button>
+      <div id="colour-panel">
+        <span>
+          <button class="colour-btn" style="background-color: #000;" data-colour="#000"></button>
+          <button class="colour-btn" style="background-color: #666;" data-colour="#444"></button>
+          <button class="colour-btn" style="background-color: #8B4513;" data-colour="#8B4513"></button>
+          <button class="colour-btn" style="background-color: #ffa500;" data-colour="#ffa500"></button>
+          <button class="colour-btn" style="background-color: #003366;" data-colour="#003366"></button>
+          <button class="colour-btn" style="background-color: #006400;" data-colour="#006400"></button>
+          <button class="colour-btn" style="background-color: #800080;" data-colour="#800080"></button>
+        </span>
+        <span>
+          <button class="colour-btn" style="background-color: #fff;" data-colour="#fff"></button>
+          <button class="colour-btn" style="background-color: #aaa;" data-colour="#aaa"></button>
+          <button class="colour-btn" style="background-color: #f00;" data-colour="#f00"></button>
+          <button class="colour-btn" style="background-color: #ff0;" data-colour="#ff0"></button>
+          <button class="colour-btn" style="background-color: #99ccff;" data-colour="#99ccff"></button>
+          <button class="colour-btn" style="background-color: #0f0;" data-colour="#0f0"></button>
+          <button class="colour-btn" style="background-color: #EE82EE;" data-colour="#EE82EE"></button>
+        </span>
       </div>
-      <div class="column c3"></div>
+      <input id="line-width" type="range" min="1" max="100" value="5">
     </div>
-  </body>
-</html> 
+    <div class="column c3"></div>
+  </div>
+</body>
+
+</html>

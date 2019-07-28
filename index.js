@@ -20,21 +20,15 @@ console.log("websocket server created")
 wss.on('connection', function connection(ws) {
   var name = 'Player' + Math.floor(Math.random() * 1000)
   playerservice.addPlayer(name, ws)
-  gameservice.playerConnected()
+  gameservice.playerConnected(ws)
 
   ws.send(JSON.stringify({
     'type': 'my-player-name',
     'data': name
   }))
 
-  console.log(JSON.stringify(playerservice.getPlayerNames()))
-
-  wss.clients.forEach((client) => {
-    client.send(JSON.stringify({
-      'type': 'players',
-      'data': playerservice.getPlayerNames()
-    }));
-  });
+  broadcastPlayerList();
+  broadcastPlayerConnected(name);
 
   ws.on('message', function incoming(messageString) {
     var message = JSON.parse(messageString);
@@ -50,25 +44,19 @@ wss.on('connection', function connection(ws) {
         }
         break;
       case 'chat':
-        if (gameservice.playerGuess(ws.playerName, message.data)) {
-          wss.clients.forEach((client) => {
-            client.send(JSON.stringify({
-              'type': 'player-correct-guess',
-              'data': {
-                'name': ws.playerName
-              }
-            }));
-          })
-        } else {
-          wss.clients.forEach((client) => {
-            client.send(JSON.stringify({
-              'type': 'chat',
-              'data': {
-                'name': ws.playerName,
-                'message': message.data
-              }
-            }));
-          });
+        if (!gameservice.isPlayerDrawing(ws)) {
+          var guessedCorrectly = gameservice.playerGuess(ws.playerName, message.data);
+          if (!guessedCorrectly) {
+            wss.clients.forEach((client) => {
+              client.send(JSON.stringify({
+                'type': 'chat',
+                'data': {
+                  'name': ws.playerName,
+                  'message': message.data
+                }
+              }));
+            });
+          }
         }
         break;
       case 'clear-canvas':
@@ -89,7 +77,36 @@ wss.on('connection', function connection(ws) {
 
   ws.on('close', function incoming() {
     playerservice.removePlayer(ws.playerName);
+    gameservice.playerDisconnected(ws.playerName);
+    broadcastPlayerList();
+    broadcastPlayerDisconnected(ws.playerName);
   });
 
 });
 
+var broadcastPlayerList = function () {
+  wss.clients.forEach((client) => {
+    client.send(JSON.stringify({
+      'type': 'players',
+      'data': playerservice.getPlayerNames()
+    }));
+  });
+}
+
+var broadcastPlayerConnected = function (playerName) {
+  wss.clients.forEach((client) => {
+    client.send(JSON.stringify({
+      'type': 'player-connected',
+      'data': playerName
+    }));
+  });
+}
+
+var broadcastPlayerDisconnected = function (playerName) {
+  wss.clients.forEach((client) => {
+    client.send(JSON.stringify({
+      'type': 'player-disconnected',
+      'data': playerName
+    }));
+  });
+}
