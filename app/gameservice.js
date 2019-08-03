@@ -87,6 +87,7 @@ var playerGuess = function (ws, guess) {
     if (allPlayersGuessed()){
       nextTurn();
     }
+    broadcastPlayerList();
     return true;
   }
   return false;
