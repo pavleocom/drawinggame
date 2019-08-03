@@ -6,9 +6,12 @@ var gameInProgress = false;
 var drawingPlayerSocket;
 var secretWord;
 var secretWordHint;
+var interval;
+var countdown;
+var playersGuessedSet = new Set();
 
 var playerConnected = function (socket) {
-  if (!gameInProgress && playerservice.getPlayers().length >= 2) {
+  if (!gameInProgress && playerservice.getPlayerSocketList().length >= 2) {
     startGame();
   } else if (gameInProgress) {
     socket.send(JSON.stringify({
@@ -20,7 +23,7 @@ var playerConnected = function (socket) {
 
 var playerDisconnected = function (playerName) {
   console.log(playerName + " disconnected");
-  if (gameInProgress && playerservice.getPlayers().length <= 1) {
+  if (gameInProgress && playerservice.getPlayerSocketList().length <= 1) {
     stopGame();
   } else if (gameInProgress && drawingPlayerSocket.playerName === playerName) {
     nextTurn();
@@ -36,7 +39,8 @@ var startGame = function () {
 var nextTurn = function () {
   secretWord = getNewSecretWord(wordList);
   secretWordHint = getSecretWordHint(secretWord);
-  var players = playerservice.getPlayers();
+  playersGuessedSet = new Set();
+  var players = playerservice.getPlayerSocketList();
   if (drawingPlayerSocket == null) {
     drawingPlayerSocket = players[0];
   } else {
@@ -60,23 +64,46 @@ var nextTurn = function () {
     'type': 'secret-word',
     'data': secretWord
   }));
+  broadcastPlayerList();
+  if (interval) {
+    stopCountdown(interval);
+  }
+  startCountdown();  
 }
 
-var playerGuess = function (playerName, guess) {
+var playerGuess = function (ws, guess) {
   if (secretWord && guess.replace(" ", "").toLowerCase() === secretWord.replace(" ", "").toLowerCase()) {
-    console.log(playerName + " guessed correctly");
-    playerservice.getPlayers().forEach((client) => {
+    console.log(ws.playerName + " guessed correctly");
+    addPoints(ws, drawingPlayerSocket);
+    playersGuessedSet.add(ws.playerName);
+    playerservice.getPlayerSocketList().forEach((client) => {
       client.send(JSON.stringify({
         'type': 'player-correct-guess',
         'data': {
-          'name': playerName
+          'name': ws.playerName
         }
       }));
     })
-    nextTurn();
+    if (allPlayersGuessed()){
+      nextTurn();
+    }
     return true;
   }
   return false;
+}
+
+var allPlayersGuessed = function() {
+  for(const [index, playerName] of playerservice.getPlayerNames().entries()) {
+      if(playerName !== drawingPlayerSocket.playerName && !playersGuessedSet.has(playerName)) {
+        return false;
+      }
+  }
+  return true;
+}
+
+var addPoints = function (playerGuessedSocket, drawingPlayerSocket) {
+  playerGuessedSocket.playerScore += countdown * 2;
+  drawingPlayerSocket.playerScore += Math.floor(countdown / 2);
 }
 
 var isPlayerDrawing = function (socket) {
@@ -87,7 +114,7 @@ var stopGame = function () {
   gameInProgress = false;
   drawingPlayerSocket = null;
   secretWord = null;
-  playerservice.getPlayers().forEach(function (ws) {
+  playerservice.getPlayerSocketList().forEach(function (ws) {
     ws.send(JSON.stringify({
       'type': 'drawing-player-name',
       'data': 'No one'
@@ -126,9 +153,57 @@ function getNewSecretWord(wordList) {
   return secretWord;
 }
 
+var broadcastPlayerList = function () {
+  playerservice.getPlayerSocketList().forEach((socket) => {
+    socket.send(JSON.stringify({
+      'type': 'players',
+      'data': playerservice.getPlayerList()
+    }));
+  });
+}
+
+var broadcastClock = function () {
+  playerservice.getPlayerSocketList().forEach((socket) => {
+    socket.send(JSON.stringify({
+      'type': 'clock',
+      'data': countdown
+    }));
+  });
+}
+
+var getDrawingPlayersName = function () {
+  if (!drawingPlayerSocket) {
+    return null;
+  }
+  return drawingPlayerSocket.playerName;
+}
+
+var startCountdown = function () {
+  countdown = 91;
+  interval = setInterval(function () {
+    onCountdownTick(this)
+
+  }, 1000);
+}
+
+var onCountdownTick = function (intervalHandler) {
+  countdown--;
+  broadcastClock(countdown);
+  if (countdown <= 0) {
+    stopCountdown(intervalHandler);
+    nextTurn();
+  }
+}
+
+var stopCountdown = function (intervalHandler) {
+  console.log('stoppping yooooo');
+  clearInterval(intervalHandler);
+}
+
 exports.playerConnected = playerConnected;
 exports.playerDisconnected = playerDisconnected;
 exports.playerGuess = playerGuess;
 exports.isPlayerDrawing = isPlayerDrawing;
+exports.getDrawingPlayersName = getDrawingPlayersName;
 
 

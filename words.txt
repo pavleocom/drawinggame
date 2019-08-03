@@ -78,7 +78,6 @@ Telescope
 Tombstone
 Waterfall
 Antarctica
-Bellpepper
 Broomstick
 Commercial
 Controller
@@ -96,7 +95,6 @@ Toothpaste
 Cheerleader
 Electricity
 Firefighter
-Marshmellow
 Observatory
 Underground
 Cheeseburger

@@ -11,6 +11,8 @@ var chatboxOutput = document.getElementById('chatbox-output');
 var canvas = document.getElementById('canvas');
 var colourBtns = document.querySelectorAll('.colour-btn');
 var lineWidthInput = document.getElementById('line-width');
+var clockElement = document.getElementById('clock');
+var chatInput = document.getElementById('message');
 
 lineWidthInput.addEventListener('change', function (e) {
   lineWidth = lineWidthInput.value;
@@ -142,15 +144,7 @@ websocket.onmessage = function (e) {
       break;
     case 'drawing-player-name':
       drawingPlayerName = message.data;
-      var chatInput = document.getElementById('message');
-      if (myPlayerName === drawingPlayerName) {
-        chatInput.value = 'Chat disabled';
-        chatInput.disabled = true;
-      } else {
-        chatInput.value = chatInput.value.replace(/^Chat disabled$/, '');
-        chatInput.disabled = false;
-      }
-      
+      toggleChat();   
       clearCanvas()
       printBotMessage(message.data, 'is drawing', 'lightblue')
       break;
@@ -167,7 +161,7 @@ websocket.onmessage = function (e) {
       updateSecretWord(message.data)
       break;
     case 'player-correct-guess':
-      printBotMessage(message.data.name, 'correctly guessed the word!', 'limegreen')
+      printBotMessage(message.data.name, 'has guessed the word', 'limegreen')
       break;
     case 'player-connected':
       printBotMessage(message.data, 'has connected', 'lightblue')
@@ -175,6 +169,11 @@ websocket.onmessage = function (e) {
     case 'player-disconnected':
       printBotMessage(message.data, 'has disconnected', 'lightblue')
       break;
+    case 'clock':
+      updateClock(message.data);
+      break;
+    default:
+      console.log(message);
   }
 
 }
@@ -187,8 +186,22 @@ function updatePlayersList(list) {
 
   list.forEach(function (elm) {
     var div = document.createElement('div');
-    var text = document.createTextNode(elm);
-    div.appendChild(text);
+    var nameText = document.createTextNode(elm.name);
+    var nameSpan = document.createElement('span');
+    nameSpan.appendChild(nameText);
+    if (myPlayerName === elm.name) {
+      nameSpan.classList.add('my-player-name');
+    }
+    console.log(elm.name + ' is drawing: ' + elm.isDrawing);
+    if (elm.isDrawing) {
+      nameSpan.classList.add('drawing-player-name');
+    }
+    var scoreText = document.createTextNode(elm.score);
+    var scoreSpan = document.createElement('span');
+    scoreSpan.classList.add('player-score');
+    scoreSpan.appendChild(scoreText);
+    div.appendChild(nameSpan);
+    div.appendChild(scoreSpan);
     playersColumn.appendChild(div);
   });
 }
@@ -224,3 +237,16 @@ function printBotMessage(name, message, color) {
   }
 }
 
+function updateClock(clock) {
+  clockElement.innerHTML = clock;
+}
+
+function toggleChat() {
+  if (myPlayerName === drawingPlayerName) {
+    chatInput.value = 'Chat disabled';
+    chatInput.disabled = true;
+  } else {
+    chatInput.value = chatInput.value.replace(/^Chat disabled$/, '');
+    chatInput.disabled = false;
+  }
+}

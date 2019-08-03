@@ -19,6 +19,19 @@ body {
   padding: 3px 3px;
 }
 
+.player-score {
+  float: right;
+}
+
+.my-player-name {
+  color: lightblue;
+}
+
+.drawing-player-name::after {
+  content: " \f040";
+  font-family: FontAwesome;
+}
+
 .canvas-column {
   width: 800px;
 }

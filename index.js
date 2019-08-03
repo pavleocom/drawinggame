@@ -22,11 +22,7 @@ wss.on('connection', function connection(ws) {
   playerservice.addPlayer(name, ws)
   gameservice.playerConnected(ws)
 
-  ws.send(JSON.stringify({
-    'type': 'my-player-name',
-    'data': name
-  }))
-
+  sendMyPlayerName(ws, name);
   broadcastPlayerList();
   broadcastPlayerConnected(name);
 
@@ -45,7 +41,7 @@ wss.on('connection', function connection(ws) {
         break;
       case 'chat':
         if (!gameservice.isPlayerDrawing(ws)) {
-          var guessedCorrectly = gameservice.playerGuess(ws.playerName, message.data);
+          var guessedCorrectly = gameservice.playerGuess(ws, message.data);
           if (!guessedCorrectly) {
             wss.clients.forEach((client) => {
               client.send(JSON.stringify({
@@ -88,10 +84,12 @@ var broadcastPlayerList = function () {
   wss.clients.forEach((client) => {
     client.send(JSON.stringify({
       'type': 'players',
-      'data': playerservice.getPlayerNames()
+      'data': playerservice.getPlayerList()
     }));
   });
 }
+
+
 
 var broadcastPlayerConnected = function (playerName) {
   wss.clients.forEach((client) => {
@@ -109,4 +107,11 @@ var broadcastPlayerDisconnected = function (playerName) {
       'data': playerName
     }));
   });
+}
+
+var sendMyPlayerName = function (ws, name) {
+  ws.send(JSON.stringify({
+    'type': 'my-player-name',
+    'data': name
+  }))
 }
