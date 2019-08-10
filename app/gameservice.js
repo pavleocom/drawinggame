@@ -1,4 +1,5 @@
 const playerservice = require('./playerservice.js');
+const historyservice = require('./historyservice.js');
 const fs = require('fs')
 
 var wordList = getWordList("words.txt");
@@ -7,8 +8,11 @@ var drawingPlayerSocket;
 var secretWord;
 var secretWordHint;
 var interval;
+var timeout;
 var countdown;
 var playersGuessedSet = new Set();
+var previousDrawingPlayerName;
+var previousSecretWord;
 
 var playerConnected = function (socket) {
   if (!gameInProgress && playerservice.getPlayerSocketList().length >= 2) {
@@ -37,8 +41,11 @@ var startGame = function () {
 };
 
 var nextTurn = function () {
+  previousSecretWord = secretWord;
+  previousDrawingPlayerName = drawingPlayerSocket == null ? null : drawingPlayerSocket.playerName;
   secretWord = getNewSecretWord(wordList);
   secretWordHint = getSecretWordHint(secretWord);
+  historyservice.clearAll();
   playersGuessedSet = new Set();
   var players = playerservice.getPlayerSocketList();
   if (drawingPlayerSocket == null) {
@@ -68,11 +75,18 @@ var nextTurn = function () {
   if (interval) {
     stopCountdown(interval);
   }
-  startCountdown();  
+  broadcastRoundInfo(previousDrawingPlayerName, previousSecretWord, drawingPlayerSocket.playerName);
+  timeout = setTimeout(function () {
+    broadcastClearRoundInfo(); 
+    startCountdown(); 
+  }, 5000)
 }
 
 var playerGuess = function (ws, guess) {
-  if (secretWord && guess.replace(" ", "").toLowerCase() === secretWord.replace(" ", "").toLowerCase()) {
+  if (isGuessCorrect(guess, secretWord) && playersGuessedSet.has(ws.playerName)) {
+    console.log(ws.playerName + " has already guessed the word");
+    return true;
+  } else if (isGuessCorrect(guess, secretWord)) {
     console.log(ws.playerName + " guessed correctly");
     addPoints(ws, drawingPlayerSocket);
     playersGuessedSet.add(ws.playerName);
@@ -84,7 +98,7 @@ var playerGuess = function (ws, guess) {
         }
       }));
     })
-    if (allPlayersGuessed()){
+    if (allPlayersGuessed()) {
       nextTurn();
     }
     broadcastPlayerList();
@@ -93,11 +107,15 @@ var playerGuess = function (ws, guess) {
   return false;
 }
 
-var allPlayersGuessed = function() {
-  for(const [index, playerName] of playerservice.getPlayerNames().entries()) {
-      if(playerName !== drawingPlayerSocket.playerName && !playersGuessedSet.has(playerName)) {
-        return false;
-      }
+var isGuessCorrect = function (guess, secretWord) {
+  return secretWord && guess.replace(" ", "").toLowerCase() === secretWord.replace(" ", "").toLowerCase();
+}
+
+var allPlayersGuessed = function () {
+  for (const [index, playerName] of playerservice.getPlayerNames().entries()) {
+    if (playerName !== drawingPlayerSocket.playerName && !playersGuessedSet.has(playerName)) {
+      return false;
+    }
   }
   return true;
 }
@@ -115,6 +133,7 @@ var stopGame = function () {
   gameInProgress = false;
   drawingPlayerSocket = null;
   secretWord = null;
+  clearTimeout(timeout);
   playerservice.getPlayerSocketList().forEach(function (ws) {
     ws.send(JSON.stringify({
       'type': 'drawing-player-name',
@@ -172,6 +191,27 @@ var broadcastClock = function () {
   });
 }
 
+var broadcastRoundInfo = function (previousPlayerDrawingName, previousSecretWord, nextPlayerDrawingName) {
+  playerservice.getPlayerSocketList().forEach((socket) => {
+    socket.send(JSON.stringify({
+      'type': 'show-round-info',
+      'data': {
+        'previous-player-drawing': previousPlayerDrawingName,
+        'previous-secret-word': previousSecretWord,
+        'next-player-drawing': nextPlayerDrawingName
+      }
+    }));
+  });
+}
+
+var broadcastClearRoundInfo = function () {
+  playerservice.getPlayerSocketList().forEach((socket) => {
+    socket.send(JSON.stringify({
+      'type': 'hide-round-info'
+    }));
+  });
+}
+
 var getDrawingPlayersName = function () {
   if (!drawingPlayerSocket) {
     return null;
@@ -180,6 +220,7 @@ var getDrawingPlayersName = function () {
 }
 
 var startCountdown = function () {
+  console.log('start countdown');
   countdown = 91;
   interval = setInterval(function () {
     onCountdownTick(this)

@@ -34,6 +34,7 @@ body {
 
 .canvas-column {
   width: 800px;
+  position: relative;
 }
 
 .chat-column {
@@ -146,4 +147,33 @@ button {
 #colour-panel {
   width: 220px;
   display: inline-block;
+}
+
+#canvas-overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  color: #fff;
+  font-size: 1.6em;
+  /* display: none; */
+  padding-top: 120px;
+  background: rgba(0, 0, 0, .7);
+}
+
+.last-player-drawing {
+  color: lightblue;
+}
+
+.last-word {
+  color: lightgreen;
+}
+
+.next-player-drawing{
+  color: limegreen;
+}
+
+.next-player-container {
+  margin-top: 80px;
 }

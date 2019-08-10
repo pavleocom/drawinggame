@@ -3,6 +3,7 @@ const WebSocketServer = require("ws").Server
 const path = require('path')
 const playerservice = require('./app/playerservice.js');
 const gameservice = require('./app/gameservice.js');
+const historyservice = require('./app/historyservice.js');
 const PORT = process.env.PORT || 5000
 
 var app = express()
@@ -22,6 +23,7 @@ wss.on('connection', function connection(ws) {
   playerservice.addPlayer(name, ws)
   gameservice.playerConnected(ws)
 
+  sendHistory(ws);
   sendMyPlayerName(ws, name);
   broadcastPlayerList();
   broadcastPlayerConnected(name);
@@ -31,6 +33,7 @@ wss.on('connection', function connection(ws) {
     switch (message.type) {
       case 'coordinates':
         if (gameservice.isPlayerDrawing(ws)) {
+          historyservice.add(message.data);
           wss.clients.forEach((client) => {
             client.send(JSON.stringify({
               'type': 'coordinates',
@@ -57,6 +60,7 @@ wss.on('connection', function connection(ws) {
         break;
       case 'clear-canvas':
         if (gameservice.isPlayerDrawing(ws)) {
+          historyservice.clearAll();
           wss.clients.forEach((client) => {
             client.send(JSON.stringify({
               'type': 'clear-canvas'
@@ -114,4 +118,15 @@ var sendMyPlayerName = function (ws, name) {
     'type': 'my-player-name',
     'data': name
   }))
+}
+
+var sendHistory = function(ws) {
+  var history = historyservice.getHistory();
+
+  history.forEach((coordinates) => {
+    ws.send(JSON.stringify({
+      'type': 'coordinates',
+      'data': coordinates
+    }))
+  });
 }

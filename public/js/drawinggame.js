@@ -13,6 +13,11 @@ var colourBtns = document.querySelectorAll('.colour-btn');
 var lineWidthInput = document.getElementById('line-width');
 var clockElement = document.getElementById('clock');
 var chatInput = document.getElementById('message');
+var canvasOverlay = document.getElementById('canvas-overlay');
+var roundInfoPreviousPlayerDrawing = document.querySelector('.last-player-drawing');
+var roundInfoNextPlayerDrawing = document.querySelector('.next-player-drawing');
+var roundInfoPreviousWord = document.querySelector('.last-word');
+var previousRoundContainer = document.querySelector('.previous-round-container');
 
 lineWidthInput.addEventListener('change', function (e) {
   lineWidth = lineWidthInput.value;
@@ -144,8 +149,7 @@ websocket.onmessage = function (e) {
       break;
     case 'drawing-player-name':
       drawingPlayerName = message.data;
-      toggleChat();   
-      clearCanvas()
+      toggleChat();
       printBotMessage(message.data, 'is drawing', 'lightblue')
       break;
     case 'players':
@@ -172,10 +176,34 @@ websocket.onmessage = function (e) {
     case 'clock':
       updateClock(message.data);
       break;
+    case 'show-round-info':
+      showRoundInfo(message.data);
+      break;
+    case 'hide-round-info':
+      clearCanvas();
+      hideRoundInfo();
+      break;
     default:
       console.log(message);
   }
 
+}
+
+function showRoundInfo(data) {
+  if (data["previous-secret-word"] && data["previous-player-drawing"]) {
+    roundInfoPreviousWord.innerHTML = data["previous-secret-word"];
+    roundInfoPreviousPlayerDrawing.innerHTML = data["previous-player-drawing"];
+    previousRoundContainer.style.display = 'block'
+  } else {
+    previousRoundContainer.style.display = 'none'
+  }
+  roundInfoNextPlayerDrawing.innerHTML = data['next-player-drawing'];
+  canvasOverlay.style.display = "block";
+  updateClock('');
+}
+
+function hideRoundInfo() {
+  canvasOverlay.style.display = "none";
 }
 
 function updatePlayersList(list) {
@@ -192,7 +220,6 @@ function updatePlayersList(list) {
     if (myPlayerName === elm.name) {
       nameSpan.classList.add('my-player-name');
     }
-    console.log(elm.name + ' is drawing: ' + elm.isDrawing);
     if (elm.isDrawing) {
       nameSpan.classList.add('drawing-player-name');
     }
