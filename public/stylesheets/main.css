@@ -157,7 +157,7 @@ button {
   right: 0;
   color: #fff;
   font-size: 1.6em;
-  /* display: none; */
+  display: none;
   padding-top: 120px;
   background: rgba(0, 0, 0, .7);
 }
