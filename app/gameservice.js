@@ -11,7 +11,7 @@ var interval;
 var timeout;
 var countdown;
 var playersGuessedSet = new Set();
-var previousDrawingPlayerName;
+var previousDrawingPlayerId;
 var previousSecretWord;
 
 var playerConnected = function (socket) {
@@ -25,11 +25,11 @@ var playerConnected = function (socket) {
   }
 }
 
-var playerDisconnected = function (playerName) {
-  console.log(playerName + " disconnected");
+var playerDisconnected = function (playerId) {
+  console.log(playerId + " disconnected");
   if (gameInProgress && playerservice.getPlayerSocketList().length <= 1) {
     stopGame();
-  } else if (gameInProgress && drawingPlayerSocket.playerName === playerName) {
+  } else if (gameInProgress && drawingPlayerSocket.playerId === playerId) {
     nextTurn();
   }
 }
@@ -42,7 +42,7 @@ var startGame = function () {
 
 var nextTurn = function () {
   previousSecretWord = secretWord;
-  previousDrawingPlayerName = drawingPlayerSocket == null ? null : drawingPlayerSocket.playerName;
+  previousDrawingPlayer = drawingPlayerSocket == null ? null : drawingPlayerSocket.playerName;
   secretWord = getNewSecretWord(wordList);
   secretWordHint = getSecretWordHint(secretWord);
   historyservice.clearAll();
@@ -51,14 +51,17 @@ var nextTurn = function () {
   if (drawingPlayerSocket == null) {
     drawingPlayerSocket = players[0];
   } else {
-    console.log('Drawing player index: ' + ((playerservice.getPlayerNames().indexOf(drawingPlayerSocket.playerName) + 1) % players.length));
-    drawingPlayerSocket = players[(playerservice.getPlayerNames().indexOf(drawingPlayerSocket.playerName) + 1) % players.length];
+    console.log('Drawing player index: ' + ((playerservice.getPlayerIds().indexOf(drawingPlayerSocket.playerId) + 1) % players.length));
+    drawingPlayerSocket = players[(playerservice.getPlayerIds().indexOf(drawingPlayerSocket.playerId) + 1) % players.length];
   }
-  console.log("Drawing player name: " + drawingPlayerSocket.playerName);
+  console.log("Drawing player id: " + drawingPlayerSocket.playerId);
   players.forEach(function (ws) {
     ws.send(JSON.stringify({
-      'type': 'drawing-player-name',
-      'data': drawingPlayerSocket.playerName
+      'type': 'drawing-player',
+      'data': {
+        'id': drawingPlayerSocket.playerId,
+        'name': drawingPlayerSocket.playerName
+      }
     }))
   })
   players.forEach(function (ws) {
@@ -75,7 +78,7 @@ var nextTurn = function () {
   if (interval) {
     stopCountdown(interval);
   }
-  broadcastRoundInfo(previousDrawingPlayerName, previousSecretWord, drawingPlayerSocket.playerName);
+  broadcastRoundInfo(previousDrawingPlayer, previousSecretWord, drawingPlayerSocket.playerName);
   timeout = setTimeout(function () {
     broadcastClearRoundInfo(); 
     startCountdown(); 
@@ -83,18 +86,18 @@ var nextTurn = function () {
 }
 
 var playerGuess = function (ws, guess) {
-  if (isGuessCorrect(guess, secretWord) && playersGuessedSet.has(ws.playerName)) {
-    console.log(ws.playerName + " has already guessed the word");
+  if (isGuessCorrect(guess, secretWord) && playersGuessedSet.has(ws.playerId)) {
+    console.log(ws.playerId + " has already guessed the word");
     return true;
   } else if (isGuessCorrect(guess, secretWord)) {
-    console.log(ws.playerName + " guessed correctly");
+    console.log(ws.playerId + " guessed correctly");
     addPoints(ws, drawingPlayerSocket);
-    playersGuessedSet.add(ws.playerName);
+    playersGuessedSet.add(ws.playerId);
     playerservice.getPlayerSocketList().forEach((client) => {
       client.send(JSON.stringify({
         'type': 'player-correct-guess',
         'data': {
-          'name': ws.playerName
+          'id': ws.playerName
         }
       }));
     })
@@ -112,8 +115,8 @@ var isGuessCorrect = function (guess, secretWord) {
 }
 
 var allPlayersGuessed = function () {
-  for (const [index, playerName] of playerservice.getPlayerNames().entries()) {
-    if (playerName !== drawingPlayerSocket.playerName && !playersGuessedSet.has(playerName)) {
+  for (const [index, playerId] of playerservice.getPlayerIds().entries()) {
+    if (playerId !== drawingPlayerSocket.playerId && !playersGuessedSet.has(playerId)) {
       return false;
     }
   }
@@ -126,7 +129,7 @@ var addPoints = function (playerGuessedSocket, drawingPlayerSocket) {
 }
 
 var isPlayerDrawing = function (socket) {
-  return drawingPlayerSocket && drawingPlayerSocket.playerName === socket.playerName;
+  return drawingPlayerSocket && drawingPlayerSocket.playerId === socket.playerId;
 }
 
 var stopGame = function () {
@@ -136,7 +139,7 @@ var stopGame = function () {
   clearTimeout(timeout);
   playerservice.getPlayerSocketList().forEach(function (ws) {
     ws.send(JSON.stringify({
-      'type': 'drawing-player-name',
+      'type': 'drawing-player-id',
       'data': 'No one'
     }))
   })
@@ -191,14 +194,15 @@ var broadcastClock = function () {
   });
 }
 
-var broadcastRoundInfo = function (previousPlayerDrawingName, previousSecretWord, nextPlayerDrawingName) {
+var broadcastRoundInfo = function (previousPlayerDrawing, previousSecretWord, nextPlayerDrawing) {
+  console.log("lalala: " + previousSecretWord + ' ' + previousPlayerDrawing);
   playerservice.getPlayerSocketList().forEach((socket) => {
     socket.send(JSON.stringify({
       'type': 'show-round-info',
       'data': {
-        'previous-player-drawing': previousPlayerDrawingName,
+        'previous-player-drawing': previousPlayerDrawing,
         'previous-secret-word': previousSecretWord,
-        'next-player-drawing': nextPlayerDrawingName
+        'next-player-drawing': nextPlayerDrawing
       }
     }));
   });
@@ -212,16 +216,17 @@ var broadcastClearRoundInfo = function () {
   });
 }
 
-var getDrawingPlayersName = function () {
+var getDrawingPlayersId = function () {
   if (!drawingPlayerSocket) {
     return null;
   }
-  return drawingPlayerSocket.playerName;
+  return drawingPlayerSocket.playerId;
 }
 
 var startCountdown = function () {
   console.log('start countdown');
-  countdown = 91;
+  countdown = 90;
+  broadcastClock(countdown);
   interval = setInterval(function () {
     onCountdownTick(this)
 
@@ -246,6 +251,6 @@ exports.playerConnected = playerConnected;
 exports.playerDisconnected = playerDisconnected;
 exports.playerGuess = playerGuess;
 exports.isPlayerDrawing = isPlayerDrawing;
-exports.getDrawingPlayersName = getDrawingPlayersName;
+exports.getDrawingPlayersId = getDrawingPlayersId;
 
 

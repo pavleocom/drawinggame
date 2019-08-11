@@ -23,11 +23,11 @@ body {
   float: right;
 }
 
-.my-player-name {
+.my-player-id {
   color: lightblue;
 }
 
-.drawing-player-name::after {
+.drawing-player-id::after {
   content: " \f040";
   font-family: FontAwesome;
 }
@@ -179,4 +179,45 @@ button {
 
 #svg {
   display: none;
+}
+
+#player-name-input {
+  margin-top: 50px;
+  border: 3px solid black;
+  padding: 13px 5px 18px 5px;
+  font-size: 1.5em;
+  color: white;
+  background: rgba(0, 0, 0, .7);
+  outline: none;
+  text-align: center;
+}
+
+#player-name-submit {
+  border: none;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: none;
+  cursor: pointer;
+  padding: 20px 40px;
+  display: inline-block;
+  margin: 0px 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  outline: none;
+  position: relative;
+  background: #0e83cd;
+  border: 3px solid #fff;
+  color: #fff;
+
+}
+
+#player-name-submit:hover {
+  color: #0e83cd;
+  background: #fff;
+  -webkit-transition: all 0.3s;
+  -moz-transition: all 0.3s;
+  transition: all 0.3s;
 }

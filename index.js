@@ -1,17 +1,28 @@
 const express = require('express')
 const WebSocketServer = require("ws").Server
 const path = require('path')
+const cookieParser = require('cookie-parser');
 const playerservice = require('./app/playerservice.js');
 const gameservice = require('./app/gameservice.js');
 const historyservice = require('./app/historyservice.js');
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5000;
 
 var app = express()
   .use(express.static(path.join(__dirname, 'public')))
+  .use(cookieParser())
   .set('views', path.join(__dirname, 'views'))
   .set('view engine', 'ejs')
-  .get('/', (req, res) => res.render('pages/index'))
+  .get('/', (req, res) => {
+    if (req.cookies.playerName) {
+      res.render('pages/index')
+    } else {
+      res.redirect('/name')
+    }
+  })
+  .get('/name', (req, res) => res.render('pages/name'))
   .listen(PORT, () => console.log(`Listening on ${PORT}`))
+
+
 
 console.log("http server listening on %d", PORT)
 
@@ -19,18 +30,22 @@ var wss = new WebSocketServer({ server: app })
 console.log("websocket server created")
 
 wss.on('connection', function connection(ws) {
-  var name = 'Player' + Math.floor(Math.random() * 1000)
-  playerservice.addPlayer(name, ws)
-  gameservice.playerConnected(ws)
 
-  sendHistory(ws);
-  sendMyPlayerName(ws, name);
-  broadcastPlayerList();
-  broadcastPlayerConnected(name);
 
   ws.on('message', function incoming(messageString) {
     var message = JSON.parse(messageString);
     switch (message.type) {
+      case 'player-join':
+        console.log('player joining: ' + message.data);
+        var id = Math.floor(Math.random() * 1000000000)
+        playerservice.addPlayer(id, message.data, ws)
+        gameservice.playerConnected(ws)
+
+        sendHistory(ws);
+        sendMyPlayerId(ws, id);
+        broadcastPlayerList();
+        broadcastPlayerConnected(message.data);
+        break;
       case 'coordinates':
         if (gameservice.isPlayerDrawing(ws)) {
           historyservice.add(message.data);
@@ -50,7 +65,7 @@ wss.on('connection', function connection(ws) {
               client.send(JSON.stringify({
                 'type': 'chat',
                 'data': {
-                  'name': ws.playerName,
+                  'id': ws.playerId,
                   'message': message.data
                 }
               }));
@@ -76,8 +91,8 @@ wss.on('connection', function connection(ws) {
   });
 
   ws.on('close', function incoming() {
-    playerservice.removePlayer(ws.playerName);
-    gameservice.playerDisconnected(ws.playerName);
+    playerservice.removePlayer(ws.playerId);
+    gameservice.playerDisconnected(ws.playerId);
     broadcastPlayerList();
     broadcastPlayerDisconnected(ws.playerName);
   });
@@ -113,14 +128,14 @@ var broadcastPlayerDisconnected = function (playerName) {
   });
 }
 
-var sendMyPlayerName = function (ws, name) {
+var sendMyPlayerId = function (ws, id) {
   ws.send(JSON.stringify({
-    'type': 'my-player-name',
-    'data': name
+    'type': 'my-player-id',
+    'data': id
   }))
 }
 
-var sendHistory = function(ws) {
+var sendHistory = function (ws) {
   var history = historyservice.getHistory();
 
   history.forEach((coordinates) => {

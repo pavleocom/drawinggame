@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <% include ../partials/header.ejs %>
+  <script src="/js/name.js" async></script>
+</head>
+
+<body>
+  <nav id="navbar">
+    <span>Drawing Game</span>
+  </nav>
+  <div class="main">
+    <form id="player-name-form" method="post" action="/">
+      <input id="player-name-input" name="player-name" placeholder="Enter Your Name" autocomplete="off">
+      <button id="player-name-submit" type="submit">Join</button>
+    </form>
+  </div>
+</body>
+
+</html>

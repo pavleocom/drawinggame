@@ -1,7 +1,7 @@
 var websocket = new WebSocket(getWebSocketUrl(), "protocolOne");
 var mousedown = false;
-var myPlayerName;
-var drawingPlayerName;
+var myPlayerId;
+var drawingPlayerId;
 var prevX;
 var prevY;
 var colour = '#000';
@@ -22,6 +22,14 @@ var svg = document.getElementById('svg');
 var circle = document.getElementById('circle');
 
 changeCursor();
+
+websocket.onopen = function () {
+  console.log(getCookie('playerName'));
+  websocket.send(JSON.stringify({
+    'type': 'player-join',
+    'data': getCookie('playerName')
+  }));
+};
 
 lineWidthInput.addEventListener('change', function (e) {
   lineWidth = lineWidthInput.value;
@@ -68,7 +76,7 @@ document.getElementById('message_form').addEventListener('submit', function (e) 
 })
 
 canvas.addEventListener("mousemove", function (e) {
-  if (myPlayerName === drawingPlayerName) {
+  if (myPlayerId === drawingPlayerId) {
     currX = e.offsetX;
     currY = e.offsetY;
     if (mousedown) {
@@ -95,7 +103,7 @@ canvas.addEventListener("mousemove", function (e) {
   }
 });
 canvas.addEventListener("click", function (e) {
-  if (myPlayerName === drawingPlayerName) {
+  if (myPlayerId === drawingPlayerId) {
     currX = e.offsetX;
     currY = e.offsetY;
     prevX = currX;
@@ -150,19 +158,19 @@ websocket.onmessage = function (e) {
       var coords = message.data;
       draw(coords.prevX, coords.prevY, coords.currX, coords.currY, coords.colour, coords.lineWidth);
       break;
-    case 'my-player-name':
-      myPlayerName = message.data;
+    case 'my-player-id':
+      myPlayerId = message.data;
       break;
-    case 'drawing-player-name':
-      drawingPlayerName = message.data;
+    case 'drawing-player':
+      drawingPlayerId = message.data.id;
       toggleChat();
-      printBotMessage(message.data, 'is drawing', 'lightblue')
+      printBotMessage(message.data.name, 'is drawing', 'lightblue')
       break;
     case 'players':
       updatePlayersList(message.data)
       break;
     case 'chat':
-      printChatMessage(message.data.name, message.data.message)
+      printChatMessage(message.data.id, message.data.message)
       break;
     case 'clear-canvas':
       clearCanvas()
@@ -171,7 +179,7 @@ websocket.onmessage = function (e) {
       updateSecretWord(message.data)
       break;
     case 'player-correct-guess':
-      printBotMessage(message.data.name, 'has guessed the word', 'limegreen')
+      printBotMessage(message.data.id, 'has guessed the word', 'limegreen')
       break;
     case 'player-connected':
       printBotMessage(message.data, 'has connected', 'lightblue')
@@ -196,6 +204,7 @@ websocket.onmessage = function (e) {
 }
 
 function showRoundInfo(data) {
+  console.log(data);
   if (data["previous-secret-word"] && data["previous-player-drawing"]) {
     roundInfoPreviousWord.innerHTML = data["previous-secret-word"];
     roundInfoPreviousPlayerDrawing.innerHTML = data["previous-player-drawing"];
@@ -220,20 +229,20 @@ function updatePlayersList(list) {
 
   list.forEach(function (elm) {
     var div = document.createElement('div');
-    var nameText = document.createTextNode(elm.name);
-    var nameSpan = document.createElement('span');
-    nameSpan.appendChild(nameText);
-    if (myPlayerName === elm.name) {
-      nameSpan.classList.add('my-player-name');
+    var idText = document.createTextNode(elm.name);
+    var idSpan = document.createElement('span');
+    idSpan.appendChild(idText);
+    if (myPlayerId === elm.id) {
+      idSpan.classList.add('my-player-id');
     }
     if (elm.isDrawing) {
-      nameSpan.classList.add('drawing-player-name');
+      idSpan.classList.add('drawing-player-id');
     }
     var scoreText = document.createTextNode(elm.score);
     var scoreSpan = document.createElement('span');
     scoreSpan.classList.add('player-score');
     scoreSpan.appendChild(scoreText);
-    div.appendChild(nameSpan);
+    div.appendChild(idSpan);
     div.appendChild(scoreSpan);
     playersColumn.appendChild(div);
   });
@@ -247,9 +256,9 @@ function getWebSocketUrl() {
   return location.origin.replace("https", "wss").replace("http", "ws");
 }
 
-function printChatMessage(name, message) {
+function printChatMessage(id, message) {
   var paragraphNode = document.createElement('p');
-  var messageTextNode = document.createTextNode(name + ': ' + message);
+  var messageTextNode = document.createTextNode(id + ': ' + message);
   paragraphNode.appendChild(messageTextNode);
   chatboxOutput.appendChild(paragraphNode);
   chatboxOutput.scrollTop = chatboxOutput.scrollHeight;
@@ -258,9 +267,9 @@ function printChatMessage(name, message) {
   }
 }
 
-function printBotMessage(name, message, color) {
+function printBotMessage(id, message, color) {
   var paragraphNode = document.createElement('p');
-  var messageTextNode = document.createTextNode(name + ' ' + message);
+  var messageTextNode = document.createTextNode(id + ' ' + message);
   paragraphNode.appendChild(messageTextNode);
   paragraphNode.setAttribute('style', 'color: ' + color);
   chatboxOutput.appendChild(paragraphNode);
@@ -275,7 +284,7 @@ function updateClock(clock) {
 }
 
 function toggleChat() {
-  if (myPlayerName === drawingPlayerName) {
+  if (myPlayerId === drawingPlayerId) {
     chatInput.value = 'Chat disabled';
     chatInput.disabled = true;
   } else {
@@ -296,4 +305,19 @@ function changeCursor() {
   var s = new XMLSerializer().serializeToString(svg);
   var encodedData = window.btoa(s);
   canvas.style.cssText = 'cursor: url(data:image/svg+xml;base64,' + encodedData + ') ' + radius + ' ' + radius + ', auto;';
+}
+
+function getCookie(c_name) {
+  if (document.cookie.length > 0) {
+    c_start = document.cookie.indexOf(c_name + "=");
+    if (c_start != -1) {
+      c_start = c_start + c_name.length + 1;
+      c_end = document.cookie.indexOf(";", c_start);
+      if (c_end == -1) {
+        c_end = document.cookie.length;
+      }
+      return unescape(document.cookie.substring(c_start, c_end));
+    }
+  }
+  return "";
 }
