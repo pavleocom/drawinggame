@@ -18,9 +18,14 @@ var roundInfoPreviousPlayerDrawing = document.querySelector('.last-player-drawin
 var roundInfoNextPlayerDrawing = document.querySelector('.next-player-drawing');
 var roundInfoPreviousWord = document.querySelector('.last-word');
 var previousRoundContainer = document.querySelector('.previous-round-container');
+var svg = document.getElementById('svg');
+var circle = document.getElementById('circle');
+
+changeCursor();
 
 lineWidthInput.addEventListener('change', function (e) {
   lineWidth = lineWidthInput.value;
+  changeCursor();
 })
 
 canvas.addEventListener('dblclick', function (event) {
@@ -38,6 +43,7 @@ window.addEventListener('mouseup', function (e) {
 colourBtns.forEach(function (btn) {
   btn.addEventListener('click', function (e) {
     colour = this.dataset.colour;
+    changeCursor();
   }.bind(btn))
 })
 
@@ -276,4 +282,18 @@ function toggleChat() {
     chatInput.value = chatInput.value.replace(/^Chat disabled$/, '');
     chatInput.disabled = false;
   }
+}
+
+function changeCursor() {
+  radius = Math.max(lineWidth / 2, 3);
+  length = radius * 2;
+  svg.setAttribute('width', length);
+  svg.setAttribute('height', length);
+  circle.setAttribute('fill', colour);
+  circle.setAttribute('cx', radius);
+  circle.setAttribute('cy', radius);
+  circle.setAttribute('r', radius);
+  var s = new XMLSerializer().serializeToString(svg);
+  var encodedData = window.btoa(s);
+  canvas.style.cssText = 'cursor: url(data:image/svg+xml;base64,' + encodedData + ') ' + radius + ' ' + radius + ', auto;';
 }
