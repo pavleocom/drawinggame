@@ -170,7 +170,7 @@ websocket.onmessage = function (e) {
       updatePlayersList(message.data)
       break;
     case 'chat':
-      printChatMessage(message.data.id, message.data.message)
+      printChatMessage(message.data.name, message.data.message)
       break;
     case 'clear-canvas':
       clearCanvas()
@@ -256,9 +256,9 @@ function getWebSocketUrl() {
   return location.origin.replace("https", "wss").replace("http", "ws");
 }
 
-function printChatMessage(id, message) {
+function printChatMessage(name, message) {
   var paragraphNode = document.createElement('p');
-  var messageTextNode = document.createTextNode(id + ': ' + message);
+  var messageTextNode = document.createTextNode(name + ': ' + message);
   paragraphNode.appendChild(messageTextNode);
   chatboxOutput.appendChild(paragraphNode);
   chatboxOutput.scrollTop = chatboxOutput.scrollHeight;

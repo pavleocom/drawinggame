@@ -65,7 +65,7 @@ wss.on('connection', function connection(ws) {
               client.send(JSON.stringify({
                 'type': 'chat',
                 'data': {
-                  'id': ws.playerId,
+                  'name': ws.playerName,
                   'message': message.data
                 }
               }));
