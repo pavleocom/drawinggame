@@ -3,7 +3,6 @@ const gameservice = require('./gameservice.js');
 const players = new Array();
 
 var addPlayer = function (id, name, socket) { 
-  console.log('adding player ' + id)
   socket.playerId = id
   socket.playerName = name;
   socket.playerScore = 0
@@ -11,7 +10,6 @@ var addPlayer = function (id, name, socket) {
 };
 
 var removePlayer = function (id) { 
-  console.log('removing player ' + id)
   var playerIndex = getPlayerIds().indexOf(id);
   players.splice(playerIndex, 1);
 };

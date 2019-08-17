@@ -22,21 +22,13 @@ var app = express()
   .get('/name', (req, res) => res.render('pages/name'))
   .listen(PORT, () => console.log(`Listening on ${PORT}`))
 
-
-
-console.log("http server listening on %d", PORT)
-
 var wss = new WebSocketServer({ server: app })
-console.log("websocket server created")
-
 wss.on('connection', function connection(ws) {
-
-
   ws.on('message', function incoming(messageString) {
     var message = JSON.parse(messageString);
     switch (message.type) {
       case 'player-join':
-        console.log('player joining: ' + message.data);
+        broadcastPlayerConnected(message.data);
         var id = Math.floor(Math.random() * 1000000000)
         playerservice.addPlayer(id, message.data, ws)
         gameservice.playerConnected(ws)
@@ -44,7 +36,6 @@ wss.on('connection', function connection(ws) {
         sendHistory(ws);
         sendMyPlayerId(ws, id);
         broadcastPlayerList();
-        broadcastPlayerConnected(message.data);
         break;
       case 'coordinates':
         if (gameservice.isPlayerDrawing(ws)) {
@@ -86,8 +77,6 @@ wss.on('connection', function connection(ws) {
       default:
         console.log(message);
     }
-
-
   });
 
   ws.on('close', function incoming() {
@@ -107,8 +96,6 @@ var broadcastPlayerList = function () {
     }));
   });
 }
-
-
 
 var broadcastPlayerConnected = function (playerName) {
   wss.clients.forEach((client) => {

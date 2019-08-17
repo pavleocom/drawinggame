@@ -26,7 +26,6 @@ var playerConnected = function (socket) {
 }
 
 var playerDisconnected = function (playerId) {
-  console.log(playerId + " disconnected");
   if (gameInProgress && playerservice.getPlayerSocketList().length <= 1) {
     stopGame();
   } else if (gameInProgress && drawingPlayerSocket.playerId === playerId) {
@@ -35,7 +34,6 @@ var playerDisconnected = function (playerId) {
 }
 
 var startGame = function () {
-  console.log("Game started");
   gameInProgress = true;
   nextTurn();
 };
@@ -51,10 +49,8 @@ var nextTurn = function () {
   if (drawingPlayerSocket == null) {
     drawingPlayerSocket = players[0];
   } else {
-    console.log('Drawing player index: ' + ((playerservice.getPlayerIds().indexOf(drawingPlayerSocket.playerId) + 1) % players.length));
     drawingPlayerSocket = players[(playerservice.getPlayerIds().indexOf(drawingPlayerSocket.playerId) + 1) % players.length];
   }
-  console.log("Drawing player id: " + drawingPlayerSocket.playerId);
   players.forEach(function (ws) {
     ws.send(JSON.stringify({
       'type': 'drawing-player',
@@ -87,10 +83,8 @@ var nextTurn = function () {
 
 var playerGuess = function (ws, guess) {
   if (isGuessCorrect(guess, secretWord) && playersGuessedSet.has(ws.playerId)) {
-    console.log(ws.playerId + " has already guessed the word");
     return true;
   } else if (isGuessCorrect(guess, secretWord)) {
-    console.log(ws.playerId + " guessed correctly");
     addPoints(ws, drawingPlayerSocket);
     playersGuessedSet.add(ws.playerId);
     playerservice.getPlayerSocketList().forEach((client) => {
@@ -195,7 +189,6 @@ var broadcastClock = function () {
 }
 
 var broadcastRoundInfo = function (previousPlayerDrawing, previousSecretWord, nextPlayerDrawing) {
-  console.log("lalala: " + previousSecretWord + ' ' + previousPlayerDrawing);
   playerservice.getPlayerSocketList().forEach((socket) => {
     socket.send(JSON.stringify({
       'type': 'show-round-info',
@@ -224,7 +217,6 @@ var getDrawingPlayersId = function () {
 }
 
 var startCountdown = function () {
-  console.log('start countdown');
   countdown = 90;
   broadcastClock(countdown);
   interval = setInterval(function () {
@@ -243,7 +235,6 @@ var onCountdownTick = function (intervalHandler) {
 }
 
 var stopCountdown = function (intervalHandler) {
-  console.log('stoppping yooooo');
   clearInterval(intervalHandler);
 }
 

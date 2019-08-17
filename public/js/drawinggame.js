@@ -14,6 +14,7 @@ var lineWidthInput = document.getElementById('line-width');
 var clockElement = document.getElementById('clock');
 var chatInput = document.getElementById('message');
 var canvasOverlay = document.getElementById('canvas-overlay');
+var drawingControls = document.getElementById('drawing_controls');
 var roundInfoPreviousPlayerDrawing = document.querySelector('.last-player-drawing');
 var roundInfoNextPlayerDrawing = document.querySelector('.next-player-drawing');
 var roundInfoPreviousWord = document.querySelector('.last-word');
@@ -24,11 +25,11 @@ var circle = document.getElementById('circle');
 changeCursor();
 
 websocket.onopen = function () {
-  console.log(getCookie('playerName'));
   websocket.send(JSON.stringify({
     'type': 'player-join',
     'data': getCookie('playerName')
   }));
+  deleteCookie('playerName');
 };
 
 lineWidthInput.addEventListener('change', function (e) {
@@ -164,6 +165,7 @@ websocket.onmessage = function (e) {
     case 'drawing-player':
       drawingPlayerId = message.data.id;
       toggleChat();
+      toggleDrawingControls();
       printBotMessage(message.data.name, 'is drawing', 'lightblue')
       break;
     case 'players':
@@ -204,7 +206,6 @@ websocket.onmessage = function (e) {
 }
 
 function showRoundInfo(data) {
-  console.log(data);
   if (data["previous-secret-word"] && data["previous-player-drawing"]) {
     roundInfoPreviousWord.innerHTML = data["previous-secret-word"];
     roundInfoPreviousPlayerDrawing.innerHTML = data["previous-player-drawing"];
@@ -293,6 +294,14 @@ function toggleChat() {
   }
 }
 
+function toggleDrawingControls() {
+  if (myPlayerId === drawingPlayerId) {
+    drawingControls.style.display = "inline-block";
+  } else {
+    drawingControls.style.display = "none";
+  }
+}
+
 function changeCursor() {
   radius = Math.max(lineWidth / 2, 3);
   length = radius * 2;
@@ -320,4 +329,8 @@ function getCookie(c_name) {
     }
   }
   return "";
+}
+
+function deleteCookie(name) {
+  document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 }

@@ -148,6 +148,10 @@ button {
   display: inline-block;
 }
 
+#drawing_controls {
+  display: none;
+}
+
 #canvas-overlay {
   position: absolute;
   top: 0;
